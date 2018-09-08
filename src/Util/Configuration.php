@@ -15,7 +15,6 @@ use PHPUnit\Framework\Exception;
 use PHPUnit\Framework\TestSuite;
 use PHPUnit\Runner\TestSuiteSorter;
 use PHPUnit\TextUI\ResultPrinter;
-use SebastianBergmann\FileIterator\Facade as FileIteratorFacade;
 use SebastianBergmann\FileIterator\Finder;
 use SebastianBergmann\FileIterator\Filter;
 
