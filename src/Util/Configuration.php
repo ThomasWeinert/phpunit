@@ -16,6 +16,9 @@ use PHPUnit\Framework\TestSuite;
 use PHPUnit\Runner\TestSuiteSorter;
 use PHPUnit\TextUI\ResultPrinter;
 use SebastianBergmann\FileIterator\Facade as FileIteratorFacade;
+use SebastianBergmann\FileIterator\Finder;
+use SebastianBergmann\FileIterator\Filter;
+
 
 /**
  * Wrapper for the PHPUnit XML configuration file.
@@ -1089,8 +1092,10 @@ final class Configuration
             }
         }
 
-        $fileIteratorFacade = new FileIteratorFacade;
+        //$fileIteratorFacade = new FileIteratorFacade;
         $testSuiteFilter    = $testSuiteFilter ? \explode(',', $testSuiteFilter) : [];
+
+        $fileFinders = new \AppendIterator();
 
         foreach ($testSuiteNode->getElementsByTagName('directory') as $directoryNode) {
             /** @var DOMElement $directoryNode */
@@ -1119,15 +1124,19 @@ final class Configuration
                 $suffix = (string) $directoryNode->getAttribute('suffix');
             }
 
-            $files = $fileIteratorFacade->getFilesAsArray(
-                $this->toAbsolutePath($directory),
-                $suffix,
-                $prefix,
-                $exclude
+            $fileFinders->append(
+                new Finder\Files(
+                    $this->toAbsolutePath($directory),
+                    $prefix,
+                    $suffix
+                )
             );
-
-            $suite->addTestFiles($files);
         }
+
+        $files = new \AppendIterator();
+        $files->append(
+          new Filter\ExcludePaths($fileFinders, $exclude)
+        );
 
         foreach ($testSuiteNode->getElementsByTagName('file') as $fileNode) {
             /** @var DOMElement $fileNode */
@@ -1141,13 +1150,8 @@ final class Configuration
                 continue;
             }
 
-            $file = $fileIteratorFacade->getFilesAsArray(
-                $this->toAbsolutePath($file)
-            );
+            $file = $this->toAbsolutePath($file);
 
-            if (!isset($file[0])) {
-                continue;
-            }
 
             $file = $file[0];
 
@@ -1155,8 +1159,14 @@ final class Configuration
                 continue;
             }
 
-            $suite->addTestFile($file);
+            $files->append(
+                new Finder\File($file)
+            );
         }
+
+        $suite->addTestFiles(
+            new Filter\Unique($files)
+        );
 
         return $suite;
     }
