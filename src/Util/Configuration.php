@@ -1152,9 +1152,6 @@ final class Configuration
 
             $file = $this->toAbsolutePath($file);
 
-
-            $file = $file[0];
-
             if (!$this->satisfiesPhpVersion($fileNode)) {
                 continue;
             }
